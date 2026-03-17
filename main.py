@@ -11,15 +11,14 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Ultimate Quantum Simulator - Tvary a Kontext")
 clock = pygame.time.Clock()
 
-# --- FOTNY ---
-font_tiny = pygame.font.SysFont("segoeui", 12)
-font_small = pygame.font.SysFont("segoeui", 16)
-font_medium = pygame.font.SysFont("segoeui", 22)
-font_large = pygame.font.SysFont("segoeui", 32)
-font_title = pygame.font.SysFont("segoeui", 40)
-font_huge = pygame.font.SysFont("segoeui", 60)
+# Zde je ta klicova oprava pro web: pouzivame zabudovany font (None)
+font_tiny = pygame.font.Font(None, 16)
+font_small = pygame.font.Font(None, 20)
+font_medium = pygame.font.Font(None, 26)
+font_large = pygame.font.Font(None, 36)
+font_title = pygame.font.Font(None, 46)
+font_huge = pygame.font.Font(None, 66)
 
-# --- BARVY ---
 BG_COLOR = (10, 12, 15)
 WHITE = (255, 255, 255)
 GRAY = (150, 150, 160)
@@ -29,7 +28,6 @@ COLOR_SP_NEG = (255, 100, 255)
 COLOR_D_POS = (255, 150, 50)
 COLOR_D_NEG = (50, 200, 255)
 
-# --- KVANTOVE ROVNICE (Upraveno pro realnejsi ostrejsi tvary) ---
 def eval_psi(otype, x, y, z, r):
     if r == 0: return 0
     decay = math.exp(-r / 1.8) 
@@ -52,7 +50,6 @@ def eval_psi(otype, x, y, z, r):
         return (2*z*z - x*x - y*y) * decay
     return 0
 
-# --- MONTE CARLO GENERATOR ---
 def generate_electron_cloud(otype, is_d_orbital, num_points=4000):
     points = []
     max_p = 0.0
@@ -69,7 +66,6 @@ def generate_electron_cloud(otype, is_d_orbital, num_points=4000):
         psi = eval_psi(otype, x, y, z, r)
         prob = psi**2
         
-        # Zostreni tvaru: umocnime pravdepodobnost, cimz odrizneme slaby sum na okrajich
         if random.random() * max_p < (prob * 1.2): 
             is_positive_phase = (psi > 0)
             if is_d_orbital:
@@ -81,7 +77,6 @@ def generate_electron_cloud(otype, is_d_orbital, num_points=4000):
             
     return points
 
-# --- 3D ENGINE ---
 def rotate_3d(x, y, z, angle_x, angle_y):
     cos_x, sin_x = math.cos(angle_x), math.sin(angle_x)
     y1 = y * cos_x - z * sin_x
@@ -100,7 +95,6 @@ def create_glow_sprite(color, radius):
     pygame.draw.circle(surf, (255, 255, 255, 200), (radius, radius), radius*0.2)
     return surf
 
-# --- UI DATA ---
 ORBITALS = [
     {'id': '1s', 'name': '1s Orbital', 'type': 'sp', 'desc': 'Koule. Nema zadny uzel. Elektron obaluje jadro ze vsech stran rovnomerne.'},
     {'id': '2pz', 'name': '2p_z Orbital', 'type': 'sp', 'desc': 'Tvar cinky. Uzel v rovine XY rozdeluje elektronovou hustotu na dve poloviny opacne faze.'},
@@ -125,7 +119,7 @@ async def main():
         screen.blit(sub_txt, (WIDTH//2 - sub_txt.get_width()//2, HEIGHT//2 + 30))
         
         pygame.draw.rect(screen, (50, 50, 60), (WIDTH//2 - 200, HEIGHT//2 + 80, 400, 10))
-        pygame.draw.rect(screen, COLOR_SP_POS, (WIDTH//2 - 200, HEIGHT//2 + 80, 400 * ((i+1)/len(ORBITALS)), 10))
+        pygame.draw.rect(screen, COLOR_SP_POS, (WIDTH//2 - 200, HEIGHT//2 + 80, int(400 * ((i+1)/len(ORBITALS))), 10))
         
         pygame.display.flip()
         
@@ -137,7 +131,6 @@ async def main():
                 pygame.quit()
                 sys.exit()
                 
-        # Nutne pro pygbag behem dlouheho nacitani, aby web nezamrzl
         await asyncio.sleep(0)
 
     sprites = {
@@ -208,7 +201,6 @@ async def main():
         cx = WIDTH * 0.33
         cy = HEIGHT // 2
 
-        # 1. Osy
         axes = [
             {'end': (200, 0, 0), 'color': (150, 40, 40), 'label': 'X'},
             {'end': (0, 200, 0), 'color': (40, 150, 40), 'label': 'Y'},
@@ -221,7 +213,6 @@ async def main():
             sy = -ry + cy
             render_queue.append({'type': 'axis', 'sx1': cx, 'sy1': cy, 'sx2': sx, 'sy2': sy, 'z': rz, 'c': ax['color'], 'l': ax['label']})
 
-        # 2. Kontext Atomu a Vazeb (geometrie)
         if show_context:
             context_points = []
             if current_data['type'] == 'd':
@@ -241,7 +232,6 @@ async def main():
                 render_queue.append({'type': 'bond', 'sx1': cx, 'sy1': cy, 'sx2': sx, 'sy2': sy, 'z': rz})
                 render_queue.append({'type': 'ligand', 'sx': sx, 'sy': sy, 'z': rz})
 
-        # 3. Elektrony
         for pt in cloud:
             jx = pt[0] + random.uniform(-1.5, 1.5)
             jy = pt[1] + random.uniform(-1.5, 1.5)
@@ -375,7 +365,6 @@ async def main():
         pygame.display.flip()
         clock.tick(60)
         
-        # Nutne pro pygbag v kazdem cyklu hlavni smycky
         await asyncio.sleep(0)
 
 if __name__ == "__main__":
